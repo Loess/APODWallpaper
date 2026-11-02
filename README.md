@@ -15,6 +15,8 @@ https://apod.com/en/lib/about_apod.html
 
 ## Build
 ```cmd
+go mod init apod
+go get golang.org/x/sys/windows
 go build -ldflags="-s -w" -o apod.exe apod.go
 ```
 
