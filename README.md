@@ -14,6 +14,14 @@ https://apod.com/en/lib/about_apod.html
   Download the last compatible version here: https://go.dev/dl/?old#go1.20 (e.g., `go1.20.14.windows-amd64.msi`)
 
 ## Build
+The `go.mod` and `go.sum` files are included in the repository to ensure reproducible builds.
+
+1. Download dependencies (fetches `golang.org/x/sys` and others):
+   ```cmd
+   go mod download
+   ```
+2. Build the executable:
+
 ```cmd
 go mod init apod
 go get golang.org/x/sys/windows
