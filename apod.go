@@ -41,8 +41,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	// 3. Flags
-	style := flag.String("style", "center", "Wallpaper style: center, tile, stretch")
+	// 3. Flags (Default is now "fit" / scaled)
+	style := flag.String("style", "fit", "Wallpaper style: fit/scaled (default), center, tile, stretch")
 	resetCache := flag.Bool("reset", false, "Force wallpaper cache reset before applying (causes screen flicker)")
 	
 	flag.Usage = func() {
@@ -51,15 +51,17 @@ func main() {
 		fmt.Println("\nOptions:")
 		flag.PrintDefaults()
 		fmt.Println("\nExamples:")
-		fmt.Println("  apod.exe              # Center style (recommended for 2+ monitors)")
-		fmt.Println("  apod.exe -style=stretch  # Stretch (may show background bars on secondary monitors)")
+		fmt.Println("  apod.exe              # Fit/Scaled style (keeps aspect ratio, recommended)")
+		fmt.Println("  apod.exe -style=stretch  # Stretch (may distort or show bars on multi-monitor)")
 		fmt.Println("  apod.exe -reset       # If the wallpaper doesn't update")
 	}
 	flag.Parse()
 
 	// 4. Style validation
-	wallpaperStyle, tileWallpaper := "0", "0" // Default is center
+	wallpaperStyle, tileWallpaper := "6", "0" // Default is fit/scaled
 	switch strings.ToLower(*style) {
+	case "fit", "scaled":
+		wallpaperStyle, tileWallpaper = "6", "0"
 	case "center":
 		wallpaperStyle, tileWallpaper = "0", "0"
 	case "tile":
@@ -67,7 +69,7 @@ func main() {
 	case "stretch":
 		wallpaperStyle, tileWallpaper = "2", "0"
 	default:
-		fmt.Printf("[ERROR] Unknown style '%s'. Available: center, tile, stretch\n", *style)
+		fmt.Printf("[ERROR] Unknown style '%s'. Available: fit, scaled, center, tile, stretch\n", *style)
 		return
 	}
 
