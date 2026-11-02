@@ -20,14 +20,14 @@ go build -ldflags="-s -w" -o apod.exe apod.go
 
 ## Usage
 Run directly to see console output (useful for debugging):
-```cmd
-apod.exe
-```
+
+    apod.exe
 
 **Available Flags:**
-- `-style=center` *(default)*: Best for multi-monitor setups.
-- `-style=stretch`: Stretches the image (may show background color bars on secondary monitors in Win7).
-- `-style=tile`: Tiles the image.
+- `-style=fit` or `-style=scaled` *(default)*: Scales image to fit screen while keeping aspect ratio (recommended for all setups).
+- `-style=center`: Displays image at original size, centered.
+- `-style=stretch`: Stretches the image to fill the screen (may distort or show background bars on multi-monitor).
+- `-style=tile`: Tiles the image across the desktop.
 - `-reset`: Forces a wallpaper cache reset before applying (use only if the image doesn't update).
 
 ## Run Silently (No Console Window)
