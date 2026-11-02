@@ -50,6 +50,7 @@ To update the wallpaper automatically every day:
 8. **Crucial Step:** Right-click the new task in the list > **Properties**.
    - **General tab:** Select **Run only when user is logged on** (required to change the user's wallpaper) and check **Run with highest privileges**.
    - **Conditions tab:** Uncheck "Start the task only if the computer is on AC power" (if using a laptop).
+   - **Settings tab:** Check **Run task as soon as possible after a scheduled start is missed**. This ensures the wallpaper updates even if the computer was off or asleep at the scheduled time (it will run once after boot, not multiple times for each missed run).
 
 ## Troubleshooting
 - If the wallpaper doesn't change, run `apod.exe -reset` manually to clear the Win7 cache.
