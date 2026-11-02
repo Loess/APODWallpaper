@@ -23,7 +23,7 @@ type ApodResponse struct {
 }
 
 func main() {
-	// 1. Защита от повторного запуска (мьютекс)
+	// 1. Prevent concurrent runs (mutex)
 	const mutexName = "Global\\APOD_Wallpaper_Unique_Instance"
 	mutex, err := windows.CreateMutex(nil, false, windows.StringToUTF16Ptr(mutexName))
 	if err != nil {
@@ -37,28 +37,28 @@ func main() {
 		return
 	}
 
-	// 2. Общий таймаут на выполнение (60 секунд)
+	// 2. Global execution timeout (60 seconds)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	// 3. Флаги
-	style := flag.String("style", "center", "Стиль обоев: center (по центру), tile (замостить), stretch (растянуть)")
-	resetCache := flag.Bool("reset", false, "Принудительно сбросить кэш обоев перед установкой (вызывает мерцание)")
+	// 3. Flags
+	style := flag.String("style", "center", "Wallpaper style: center, tile, stretch")
+	resetCache := flag.Bool("reset", false, "Force wallpaper cache reset before applying (causes screen flicker)")
 	
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Использование: %s [опции]\n\n", os.Args[0])
-		fmt.Println("Скачивает свежее изображение APOD от NASA и устанавливает как обои.")
-		fmt.Println("\nОпции:")
+		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n\n", os.Args[0])
+		fmt.Println("Downloads the latest APOD image from NASA and sets it as the desktop wallpaper.")
+		fmt.Println("\nOptions:")
 		flag.PrintDefaults()
-		fmt.Println("\nПримеры:")
-		fmt.Println("  apod.exe              # Установка по центру (рекомендуется для 2+ мониторов)")
-		fmt.Println("  apod.exe -style=stretch  # Растянуть (на 2 мониторах может дать поля)")
-		fmt.Println("  apod.exe -reset       # Если обои не обновляются")
+		fmt.Println("\nExamples:")
+		fmt.Println("  apod.exe              # Center style (recommended for 2+ monitors)")
+		fmt.Println("  apod.exe -style=stretch  # Stretch (may show background bars on secondary monitors)")
+		fmt.Println("  apod.exe -reset       # If the wallpaper doesn't update")
 	}
 	flag.Parse()
 
-	// 4. Валидация стиля
-	wallpaperStyle, tileWallpaper := "0", "0" // По умолчанию center
+	// 4. Style validation
+	wallpaperStyle, tileWallpaper := "0", "0" // Default is center
 	switch strings.ToLower(*style) {
 	case "center":
 		wallpaperStyle, tileWallpaper = "0", "0"
@@ -67,13 +67,13 @@ func main() {
 	case "stretch":
 		wallpaperStyle, tileWallpaper = "2", "0"
 	default:
-		fmt.Printf("[ERROR] Неизвестный стиль '%s'. Доступны: center, tile, stretch\n", *style)
+		fmt.Printf("[ERROR] Unknown style '%s'. Available: center, tile, stretch\n", *style)
 		return
 	}
 
 	client := &http.Client{Timeout: 30 * time.Second}
 
-	// 5. Загрузка JSON
+	// 5. Fetch JSON
 	jsonURL := "https://science.nasa.gov/wp-json/wp/v2/apod-basic"
 	fmt.Println("[INFO] Fetching JSON from:", jsonURL)
 	
@@ -99,7 +99,7 @@ func main() {
 	imgUrl := apods[0].Hdurl
 	fmt.Println("[INFO] Image URL:", imgUrl)
 
-	// 6. Загрузка изображения
+	// 6. Download image
 	fmt.Println("[INFO] Downloading image...")
 	imgReq, _ := http.NewRequestWithContext(ctx, "GET", imgUrl, nil)
 	imgResp, err := client.Do(imgReq)
@@ -112,7 +112,7 @@ func main() {
 	contentType := imgResp.Header.Get("Content-Type")
 	fmt.Println("[INFO] Content-Type:", contentType)
 
-	// ФИКСИРОВАННОЕ имя файла — перезаписываем каждый день
+	// FIXED filename — overwritten every day
 	imgPath := filepath.Join(os.TempDir(), "apod_today.jpg")
 	
 	out, err := os.Create(imgPath)
@@ -122,7 +122,7 @@ func main() {
 	}
 
 	_, err = io.Copy(out, imgResp.Body)
-	out.Close() // Важно закрыть файл до попытки установить его как обои
+	out.Close() // Important: close file before trying to set it as wallpaper
 	if err != nil {
 		fmt.Println("[ERROR] Failed to save image:", err)
 		return
@@ -137,7 +137,7 @@ func main() {
 		return
 	}
 
-	// 7. Установка обоев
+	// 7. Set wallpaper
 	fmt.Println("[INFO] Setting wallpaper...")
 
 	k, err := registry.OpenKey(registry.CURRENT_USER, `Control Panel\Desktop`, registry.WRITE)
@@ -163,14 +163,14 @@ func main() {
 	wallpaperPathPtr := windows.StringToUTF16Ptr(imgPath)
 	emptyPathPtr := windows.StringToUTF16Ptr("")
 
-	// Опциональный сброс кэша (только если передан флаг -reset)
+	// Optional cache reset (only if -reset flag is provided)
 	if *resetCache {
 		fmt.Println("[INFO] Forcing wallpaper cache reset...")
 		proc.Call(20, 0, uintptr(unsafe.Pointer(emptyPathPtr)), 0x03)
 		time.Sleep(150 * time.Millisecond) 
 	}
 
-	// Применяем новые обои
+	// Apply new wallpaper
 	fmt.Println("[INFO] Applying new wallpaper...")
 	ret, _, lastErr := proc.Call(
 		20, // SPI_SETDESKWALLPAPER
