@@ -21,12 +21,9 @@ The `go.mod` and `go.sum` files are included in the repository to ensure reprodu
    go mod download
    ```
 2. Build the executable:
-
-```cmd
-go mod init apod
-go get golang.org/x/sys/windows
-go build -ldflags="-s -w" -o apod.exe apod.go
-```
+   ```cmd
+   go build -ldflags="-s -w" -o apod.exe apod.go
+   ```
 
 ## Usage
 Run directly to see console output (useful for debugging):
